@@ -1,5 +1,7 @@
 # RSTA
 
+Reading data stored by version 7 of Statistica software package.
+
 RSTA decodes supported binary `.sta` files to R data frames and preserves
 variable metadata, value labels, missing-value codes, file notes, and case
 names when they are present.
