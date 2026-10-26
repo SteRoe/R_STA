@@ -1,0 +1,189 @@
+STA-Decoder - Manual
+================================
+
+file: decode_sta.R
+
+This manual describes functionality inside the script decode_sta.R. To
+read a STA-file the function decode_sta() is used.
+It detects, whether a file follows the supported STA Version 7 structure.
+The following scripts should be loaded:
+
+    source("R/decode_sta.R")
+    source("R/decode_sta7.R")
+
+The decoder does not read  CSV-files.
+
+
+1. Preparation
+---------------
+
+The script becomes loaded into the R session by:
+
+    source("/Path_to_Project/decode_sta.R")
+
+Automated tests are located under tests/testthat. They can be used
+from the package directory using testthat:
+
+    install.packages(c("testthat", "withr"))  # only once
+    testthat::test_local(".", reporter = "summary")
+
+These tests write synthetic STA-files into a temporary directory.
+No external STA files are needed.
+
+
+2. Read STA-file: decode_sta()
+-----------------------------------
+
+call:
+
+    decode_sta(path)
+
+parameter:
+
+  path
+    path to the binary STA-file.
+
+result:
+
+  A data.frame with one row per observation and one column per variable. if there
+  are STA-descriptors available inside the file, these become translated into a
+  separate data.frame: attr(x, "variable_metadata").
+  If there are no variable names inside the STA-file, the decoder writes its own
+  names like Var1, Var2 and so on.
+  
+  Byte- and doble- and integer-variables remain numeric and become not recoded 
+  by their associated text values.
+  Text-Variables become decoded as R character vectors. Missing values become
+  coded as NA.
+  
+
+Additional attributes as results:
+
+  attr(x, "variable_metadata")
+    Data.frame with associated meta data. It contains:
+
+      name          variable name
+      text          long name or formula associated to a variable
+      type          data type as "Double", "String", "Integer" oder
+                    "Byte"
+      width         width in byte
+      storage_code  numeric data type: 0=Double, 1=String,
+                    2=Integer, 3=Byte
+      missing_value Missing-code from the STA-file. This code becomes replaced
+                    with NA. Default value for "Byte": 255 and
+                    "-999999998" for "Integer" and "Double".
+                    String variables do not contain an missing-value.
+
+    example:
+
+      x <- decode_sta("./example.sta")
+      metadata <- attr(x, "variable_metadata")
+      metadata[metadata$name == "Var1", ]
+      metadata$text[metadata$name == "Long text var 1"]
+
+  attr(x, "value_labels")
+    Named list with one data.frame per variable. This data.frame contains
+    the columns "code" and "label". Without stored text labels inside the 
+    STA-file, this data.frame is empty.
+
+  attr(x, "chr_values")
+    A data.frame with all textlabels of a STA-file with the columns variable,
+    code and chr. Without stored text labels inside the STA-file, this
+    data.frame is empty.
+
+    Beispiel:
+
+      x <- decode_sta("./example.sta")
+      attr(x, "chr_values")
+
+  attr(x, "file_notes")
+    chr-vector wirh the header of the STA-file, if available.
+
+  attr(x, "file_notes2")
+    chr-vector with the second header of the STA-file, if available.
+
+  attr(x, "rownames")
+    chr-vector with the row names of the STA-file, if available.
+
+3. Helper functions
+------------------
+
+The following functions are available inside the package, decode_sta() uses
+them, when needed. Direct call is not necessary.
+
+
+3.1 decode_fixed_width_records()
+
+Call:
+
+    decode_fixed_width_records(data, n_obs, row_stride, layout)
+
+Parameter:
+
+  data
+    Raw-vector with record chain.
+
+  n_obs
+    Number of observations.
+
+  row_stride
+    Size of one record.
+
+  layout
+    data.frame with the columns name, offset, width und type. offset is the
+    zero-based byte-offset inside the record. Supported types are character,
+    integer_text, byte_integer, integer and double.
+
+result:
+
+  data.frame with the decoded columns. Invalid file layouts result in an error
+  message.
+
+3.2 decode_metadata_records()
+
+Call:
+
+    decode_metadata_records(data, metadata, n_obs, n_vars, row_stride)
+
+Parameter:
+
+  data
+    raw-vector of the records.
+
+  metadata
+    raw-vektor of the STA-meta data.
+
+  n_obs
+    Number of observations.
+
+  n_vars
+    number of variables.
+
+  row_stride
+    size of one record in byte.
+
+Result:
+
+  data.frame with the variable description. Additional attributes are
+  variable_metadata, value_labels and file_notesl, if available.
+
+
+4. Example
+------------
+
+Read STA-file and show dimensions:
+
+    x <- decode_sta("./example.sta")
+    dim(x)
+
+Show meta data, text values and missing codes:
+
+    metadata <- attr(x, "variable_metadata")
+    metadata[metadata$name == "var1", ]
+
+Show header and text labels:
+
+    attr(x, "file_notes")
+    attr(x, "file_notes2")
+    attr(x, "chr_values")
+    attr(x, "rownames")

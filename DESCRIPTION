@@ -1,0 +1,20 @@
+Package: RSTA
+Title: Read Binary STA Files
+Version: 0.1.0
+Authors@R: 
+    person(given = "Stefan",
+           family = "Rder",
+           role = c("aut", "cre"),
+           email = "stefan.roeder@ufz.de",
+           comment = c(ORCID = "0000-0001-9367-663X"))
+Description: Decodes binary STA files into data frames while preserving
+    variable descriptions, storage types, missing-value codes, value labels,
+    file notes, and case names stored in the file metadata.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Suggests:
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.1
